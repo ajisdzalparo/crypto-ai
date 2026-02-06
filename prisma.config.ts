@@ -1,6 +1,13 @@
-import path from "node:path";
-import { defineConfig } from "prisma/config";
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/alpha_screener";
+}
 
 export default defineConfig({
-  schema: path.join(__dirname, "prisma", "schema.prisma"),
+  schema: "./src/db/schema.prisma",
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
 });
