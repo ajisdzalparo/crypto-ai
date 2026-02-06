@@ -9,6 +9,9 @@ RUN bun install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# Set dummy DATABASE_URL for prisma generate
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dummy"
+
 # Generate Prisma client
 RUN bunx prisma generate
 
@@ -26,7 +29,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 EXPOSE 3000
 

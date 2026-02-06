@@ -33,7 +33,8 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    command: sh -c "bunx prisma db push && bun server.js"
+    # Skip prisma db push, just run the app
+    command: sh -c "bun server.js"
 
   # Caddy Reverse Proxy with Auto SSL
   caddy:
