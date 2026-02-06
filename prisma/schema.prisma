@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Signal {
+  id         String   @id @default(cuid())
+  coin       String
+  action     String
+  confidence Float
+  price      Float
+  reasoning  String
+  technical  String
+  sentiment  Float
+  createdAt  DateTime @default(now())
+
+  performances Performance[]
+}
+
+model Performance {
+  id         String    @id @default(cuid())
+  signalId   String
+  signal     Signal    @relation(fields: [signalId], references: [id])
+  entryPrice Float
+  exitPrice  Float?
+  pnl        Float? // Profit/Loss percentage
+  status     String // OPEN, CLOSED, WIN, LOSS
+  createdAt  DateTime  @default(now())
+  closedAt   DateTime?
+}
+
+model NewsCache {
+  id          String   @id @default(cuid())
+  coin        String
+  title       String
+  source      String
+  sentiment   Float? // AI-analyzed sentiment
+  url         String
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+}
