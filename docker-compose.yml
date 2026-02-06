@@ -2,7 +2,7 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:16-alpine
-    container_name: alpha-screener-db
+    container_name: crypto-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -10,8 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-alpha_screener}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    networks:
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -23,18 +23,40 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: alpha-screener-app
+    container_name: crypto-app
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-alpha_screener}
       OPEN_ROUTER: ${OPEN_ROUTER}
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "bunx prisma db push && bun server.js"
+    networks:
+      - app-network
+    command: sh -c "bunx prisma db push && bun server.js"
+
+  # Caddy Reverse Proxy with Auto SSL
+  caddy:
+    image: caddy:2-alpine
+    container_name: crypto-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    depends_on:
+      - app
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-network:
+    driver: bridge
